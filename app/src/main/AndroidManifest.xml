@@ -12,9 +12,6 @@
     <!-- Floating Bubble Overlay -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
-    <!-- Accessibility Service (System-Wide Text Reading) -->
-    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
-
     <!-- Notifications (Daily Grammar Tips) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -83,16 +80,16 @@
 
         <!-- Floating Bubble Background Service -->
         <service android:name=".service.FloatingBubbleService"
-             android:foregroundServiceType="specialUse" />
+            android:foregroundServiceType="specialUse" />
 
         <!-- Background Grammar Analysis Worker -->
         <service android:name=".service.GrammarAnalysisService"
-             android:exported="false" />
+            android:exported="false" />
 
         <!-- Accessibility Service for system-wide text reading -->
         <service android:name=".accessibility.GrammarAccessibilityService"
-                android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-                android:exported="true">
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>

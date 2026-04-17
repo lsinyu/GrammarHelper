@@ -50,6 +50,7 @@ public class DashboardActivity extends AppCompatActivity {
         errorLogDAO = new ErrorLogDAO(this);
         sessionDAO = new SessionDAO(this);
         dbHelper = new DatabaseHelper(this);
+
         errorLogDAO.open();
         sessionDAO.open();
 
@@ -104,10 +105,10 @@ public class DashboardActivity extends AppCompatActivity {
             userStatus.setText("Linked to Google Account");
             if (account.getPhotoUrl() != null) {
                 Glide.with(this)
-                     .load(account.getPhotoUrl())
-                     .placeholder(R.drawable.circle_background)
-                     .circleCrop()
-                     .into(profileImage);
+                        .load(account.getPhotoUrl())
+                        .placeholder(R.drawable.circle_background)
+                        .circleCrop()
+                        .into(profileImage);
             }
         } else {
             userName.setText("Guest User");
@@ -118,7 +119,6 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void setupStreak() {
         if (streakText == null) return;
-
         int streak = sessionDAO.getStreakDays();
         if (streak > 0) {
             streakText.setText("🔥 " + streak + "-Day Streak! Keep it up!");
@@ -130,14 +130,14 @@ public class DashboardActivity extends AppCompatActivity {
     private void setupLineChart() {
         List<Entry> entries = new ArrayList<>();
         List<com.example.grammarhelper.model.Session> sessions = sessionDAO.getAllSessions();
-        
+
         for (int i = 0; i < sessions.size(); i++) {
             com.example.grammarhelper.model.Session s = sessions.get(sessions.size() - 1 - i);
             entries.add(new Entry(i + 1, s.grammarScore));
         }
 
         if (entries.isEmpty()) {
-            entries.add(new Entry(1, 100)); 
+            entries.add(new Entry(1, 100));
         }
 
         LineDataSet dataSet = new LineDataSet(entries, "Grammar Score Over Time");
@@ -156,9 +156,9 @@ public class DashboardActivity extends AppCompatActivity {
 
         List<Entry> entries = new ArrayList<>();
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        
-        Cursor cursor = db.query(DatabaseHelper.TABLE_TEST_RESULTS, 
-                new String[]{DatabaseHelper.COL_TEST_SCORE}, 
+
+        Cursor cursor = db.query(DatabaseHelper.TABLE_TEST_RESULTS,
+                new String[]{DatabaseHelper.COL_TEST_SCORE},
                 null, null, null, null, DatabaseHelper.COL_TEST_TIMESTAMP + " ASC");
 
         int index = 1;
@@ -171,20 +171,18 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (entries.isEmpty()) {
-            testLineChart.setNoDataText("No test data available. Take a test to see your progress!");
+            testLineChart.setNoDataText("No test data available.");
             testLineChart.invalidate();
             return;
         }
 
         LineDataSet dataSet = new LineDataSet(entries, "Evaluation Scores");
-        styleLineDataSet(dataSet, "#DC2626"); 
+        styleLineDataSet(dataSet, "#DC2626");
 
         LineData lineData = new LineData(dataSet);
         testLineChart.setData(lineData);
         testLineChart.getDescription().setEnabled(false);
         testLineChart.getAxisRight().setEnabled(false);
-        testLineChart.getAxisLeft().setAxisMaximum(10f);
-        testLineChart.getAxisLeft().setAxisMinimum(0f);
         testLineChart.animateX(1000);
         testLineChart.invalidate();
     }
@@ -214,18 +212,18 @@ public class DashboardActivity extends AppCompatActivity {
             } while (cursor.moveToNext());
             cursor.close();
         } else {
-             entries.add(new PieEntry(45, "Correctness"));
-             entries.add(new PieEntry(30, "Clarity"));
-             entries.add(new PieEntry(15, "Tone"));
-             entries.add(new PieEntry(10, "Engagement"));
+            entries.add(new PieEntry(45, "Correctness"));
+            entries.add(new PieEntry(30, "Clarity"));
+            entries.add(new PieEntry(15, "Tone"));
+            entries.add(new PieEntry(10, "Engagement"));
         }
 
         PieDataSet dataSet = new PieDataSet(entries, "Error Patterns");
         int[] colors = {
-            Color.parseColor("#DC2626"), 
-            Color.parseColor("#2563EB"), 
-            Color.parseColor("#D97706"), 
-            Color.parseColor("#16A34A")
+                Color.parseColor("#DC2626"),
+                Color.parseColor("#2563EB"),
+                Color.parseColor("#D97706"),
+                Color.parseColor("#16A34A")
         };
         dataSet.setColors(colors);
         dataSet.setValueTextColor(Color.WHITE);
@@ -255,7 +253,7 @@ public class DashboardActivity extends AppCompatActivity {
             } while (cursor.moveToNext());
             cursor.close();
         } else {
-            sb.append("No errors recorded yet. Start writing!");
+            sb.append("No errors recorded yet.");
         }
         topMistakesList.setText(sb.toString());
     }
@@ -266,20 +264,16 @@ public class DashboardActivity extends AppCompatActivity {
         int totalFixes = errorLogDAO.getTotalFixedCount();
 
         List<String> badges = Arrays.asList(
-            "🥇 First Fix", 
-            "📅 7-Day Streak", 
-            "💯 100 Fixes", 
-            "📝 Grammar Master", 
-            "🎯 Tone Pro", 
-            "👑 Clarity King"
+                "🥇 First Fix", "📅 7-Day Streak", "💯 100 Fixes",
+                "📝 Grammar Master", "🎯 Tone Pro", "👑 Clarity King"
         );
         List<Boolean> unlocked = Arrays.asList(
-            totalFixes >= 1,
-            streakDays >= 7,
-            totalFixes >= 100,
-            sessionCount >= 20,
-            sessionCount >= 10,
-            totalFixes >= 50
+                totalFixes >= 1,
+                streakDays >= 7,
+                totalFixes >= 100,
+                sessionCount >= 20,
+                sessionCount >= 10,
+                totalFixes >= 50
         );
 
         BadgeAdapter adapter = new BadgeAdapter(badges, unlocked);
