@@ -92,7 +92,13 @@ public class TestActivity extends AppCompatActivity {
         btnBackFromStart.setOnClickListener(v -> finish());
         btnHome.setOnClickListener(v -> finish());
 
-        btnSubmit.setOnClickListener(v -> submitTest());
+        btnSubmit.setOnClickListener(v -> {
+            if (isAllQuestionsAnswered()) {
+                submitTest();
+            } else {
+                Toast.makeText(this, "Please answer all questions before submitting.", Toast.LENGTH_LONG).show();
+            }
+        });
         
         btnRetake.setOnClickListener(v -> {
             if (attemptCount < 2) {
@@ -266,6 +272,16 @@ public class TestActivity extends AppCompatActivity {
                 submitTest();
             }
         }.start();
+    }
+
+    private boolean isAllQuestionsAnswered() {
+        if (currentQuestions.isEmpty()) return false;
+        for (Question q : currentQuestions) {
+            if (q.radioGroup == null || q.radioGroup.getCheckedRadioButtonId() == -1) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void submitTest() {
