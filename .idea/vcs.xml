@@ -2,6 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+<<<<<<< HEAD
+=======
     <mapping directory="$PROJECT_DIR$/Grammar-Helper" vcs="Git" />
+>>>>>>> 1c5000a4a04eeab0cb9a7834bd1e5ec8f84bbb02
   </component>
 </project>

@@ -8,19 +8,153 @@
     android:padding="8dp">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginEnd="48dp"
         app:cardBackgroundColor="@color/white"
         app:cardCornerRadius="16dp"
         app:cardElevation="2dp">
 
-        <TextView
-            android:id="@+id/chatBotText"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:text="Bot message"
-            android:textColor="@color/text_primary" />
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/chatBotText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Bot message"
+                android:textColor="@color/text_primary"
+                android:textIsSelectable="true" />
+
+            <!-- Rewrite Styles Navigation Container -->
+            <LinearLayout
+                android:id="@+id/rewriteContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp">
+
+                <!-- Style Selection Tabs -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="8dp">
+
+                    <Button
+                        android:id="@+id/btnStyleProf"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Prof"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:textSize="10sp" />
+
+                    <Button
+                        android:id="@+id/btnStyleCasual"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Casual"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:textSize="10sp" />
+
+                    <Button
+                        android:id="@+id/btnStyleShort"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Short"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:textSize="10sp" />
+                </LinearLayout>
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/rewriteTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Professional"
+                        android:textStyle="bold"
+                        android:textColor="@color/primary"
+                        android:textSize="16sp"
+                        android:layout_centerHorizontal="true" />
+
+                    <ImageButton
+                        android:id="@+id/btnCopyRewrite"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_alignParentEnd="true"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:src="@drawable/ic_copy"
+                        android:contentDescription="Copy"
+                        app:tint="@color/text_secondary" />
+                </RelativeLayout>
+
+                <TextView
+                    android:id="@+id/rewriteContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_primary"
+                    android:textIsSelectable="true"
+                    android:minLines="2" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginTop="12dp">
+
+                    <Button
+                        android:id="@+id/btnPrevRewrite"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Previous"
+                        style="@style/Widget.MaterialComponents.Button.TextButton" />
+
+                    <TextView
+                        android:id="@+id/rewritePagerInfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="1/3"
+                        android:layout_marginHorizontal="16dp" />
+
+                    <Button
+                        android:id="@+id/btnNextRewrite"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Next"
+                        style="@style/Widget.MaterialComponents.Button.TextButton" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/quizContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="8dp" />
+
+            <Button
+                android:id="@+id/btnSubmitQuiz"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Submit Answers"
+                android:visibility="gone"
+                android:layout_marginTop="8dp"
+                android:layout_gravity="end"
+                style="@style/Widget.MaterialComponents.Button.TextButton" />
+        </LinearLayout>
     </androidx.cardview.widget.CardView>
 </LinearLayout>

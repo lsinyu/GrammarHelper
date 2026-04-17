@@ -186,6 +186,14 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Error Review"
             android:src="@android:drawable/ic_menu_sort_by_size" />
+
+        <ImageButton
+            android:id="@+id/btnTest"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Start Test"
+            android:src="@android:drawable/ic_menu_edit" />
     </LinearLayout>
 
     <!-- Bottom Navigation Bar -->

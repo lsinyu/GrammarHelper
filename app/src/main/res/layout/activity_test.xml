@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/testToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/primary"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:title="Learning Evaluation"
+        app:navigationIcon="?attr/homeAsUpIndicator" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- Welcome/Start Screen -->
+        <LinearLayout
+            android:id="@+id/startScreen"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="visible">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ready for your test?"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="You will have 10 personalized questions based on your recent learning. \n\nTime limit: 30 minutes.\nAttempts allowed: 2"
+                android:textAlignment="center"
+                android:textColor="@color/text_secondary"
+                android:layout_marginBottom="48dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStartActualTest"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Start Test"
+                app:cornerRadius="24dp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBackFromStart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Back to Homepage"
+                android:layout_marginTop="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                app:cornerRadius="24dp" />
+
+        </LinearLayout>
+
+        <!-- Test Content Screen -->
+        <ScrollView
+            android:id="@+id/testScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/timerText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Time Left: 30:00"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:textColor="@color/error_red" />
+
+                <LinearLayout
+                    android:id="@+id/testContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="16dp" />
+
+                <Button
+                    android:id="@+id/btnSubmitTest"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Submit Test"
+                    android:layout_marginTop="24dp" />
+
+                <LinearLayout
+                    android:id="@+id/resultLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone"
+                    android:layout_marginTop="24dp"
+                    android:gravity="center">
+
+                    <TextView
+                        android:id="@+id/scoreSummary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="24sp"
+                        android:textStyle="bold"
+                        android:textAlignment="center" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnReviewTest"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Review Questions"
+                        android:layout_marginTop="16dp"
+                        app:cornerRadius="24dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRetake"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Try Again (Second Attempt)"
+                        android:layout_marginTop="8dp"
+                        app:cornerRadius="24dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnHome"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Return to Homepage"
+                        android:layout_marginTop="8dp"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        app:cornerRadius="24dp" />
+
+                    <LinearLayout
+                        android:id="@+id/reviewContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        android:layout_marginTop="24dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+    </FrameLayout>
+</LinearLayout>

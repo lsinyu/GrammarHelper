@@ -75,6 +75,12 @@ dependencies {
     // Charts
     implementation(libs.mpandroidchart)
 
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Google Auth
+    implementation(libs.play.services.auth)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

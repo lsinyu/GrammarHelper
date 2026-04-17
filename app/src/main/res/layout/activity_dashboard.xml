@@ -33,11 +33,69 @@
                 app:tint="@android:color/white" />
         </androidx.appcompat.widget.Toolbar>
 
-        <!-- Streak Banner -->
+        <!-- Profile Header -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="16dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    app:cardCornerRadius="30dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#E5E7EB">
+
+                    <ImageView
+                        android:id="@+id/profileImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop"
+                        android:src="@android:drawable/ic_menu_gallery" />
+                </androidx.cardview.widget.CardView>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/userName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Guest User"
+                        android:textColor="@color/text_primary"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/userStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Anonymous Mode"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Streak Banner -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="16dp"
             app:cardBackgroundColor="#FEF3C7"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp">
@@ -54,13 +112,45 @@
                 android:gravity="center" />
         </androidx.cardview.widget.CardView>
 
-        <!-- Line Chart -->
+        <!-- Test Performance Chart -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/testPerformanceCard"
+            android:layout_width="match_parent"
+            android:layout_height="250dp"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="12dp"
+                    android:text="📊 Learning Evaluation Test Score"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold" />
+
+                <com.github.mikephil.charting.charts.LineChart
+                    android:id="@+id/testLineChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:padding="8dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Line Chart (Grammar Score) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/scoreChartCard"
             android:layout_width="match_parent"
             android:layout_height="250dp"
             android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginTop="16dp"
             app:cardCornerRadius="12dp"
             app:cardElevation="2dp">
 

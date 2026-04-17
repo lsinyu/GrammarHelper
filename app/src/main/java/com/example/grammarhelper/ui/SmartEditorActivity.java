@@ -208,6 +208,9 @@ public class SmartEditorActivity extends AppCompatActivity {
                 intent.putExtra("context", editorText.getText().toString());
                 startActivity(intent);
                 return true;
+            } else if (id == R.id.nav_test) {
+                startActivity(new Intent(this, TestActivity.class));
+                return true;
             } else if (id == R.id.nav_errors) {
                 ErrorReviewActivity.pendingErrors = currentErrors != null ? new ArrayList<>(currentErrors) : new ArrayList<>();
                 startActivity(new Intent(this, ErrorReviewActivity.class));

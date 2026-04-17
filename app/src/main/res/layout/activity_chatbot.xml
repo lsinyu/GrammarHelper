@@ -103,6 +103,7 @@
         android:layout_height="wrap_content"
         android:background="#FFFFFF"
         android:elevation="4dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent">
@@ -118,6 +119,14 @@
             android:maxLines="4"
             android:minHeight="48dp"
             android:padding="8dp" />
+
+        <ImageButton
+            android:id="@+id/btnVoice"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Voice Input"
+            android:src="@android:drawable/ic_btn_speak_now" />
 
         <ImageButton
             android:id="@+id/btnSend"

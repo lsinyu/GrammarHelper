@@ -31,21 +31,51 @@ public class PromptBuilder {
     }
 
     public static String buildRewriteStylesPrompt(String text) {
-        return "Rewrite the following text in exactly 3 versions. " +
-                "Label each version clearly as: " +
-                "PROFESSIONAL: [rewritten text], " +
-                "CASUAL: [rewritten text], " +
-                "SHORT: [rewritten text — max 60% of original length]. " +
+        return "Rewrite the following text in exactly 3 versions: Professional, Casual, and Short. " +
+                "Return ONLY a valid JSON object with the following structure: " +
+                "{" +
+                "\"rewrites\": [" +
+                "  {\"title\": \"Professional\", \"content\": \"...\"}," +
+                "  {\"title\": \"Casual\", \"content\": \"...\"}," +
+                "  {\"title\": \"Short\", \"content\": \"...\"}" +
+                "]" +
+                "} " +
                 "Text: \"" + text + "\"";
     }
 
     public static String buildGenerateQuizPrompt(String subtype) {
-        return "Generate exactly 3 multiple-choice grammar questions targeting the error type: \"" + subtype + "\". " +
-                "Format each question as: " +
-                "Q: [question] " +
-                "A) [option] B) [option] C) [option] D) [option] " +
-                "Answer: [correct letter] " +
-                "Explanation: [one sentence]";
+        return "Generate exactly 3 multiple-choice grammar questions targeting: \"" + subtype + "\". " +
+                "If subtype is 'Grammar', pick a random common grammar topic. " +
+                "IMPORTANT: Use simple English and easy-to-understand words suitable for beginners. " +
+                "Return ONLY a valid JSON array of objects. Each object must have: " +
+                "\"id\": integer, " +
+                "\"question\": the question text, " +
+                "\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"] " +
+                "DO NOT provide answers or explanations. DO NOT include any text other than the JSON array.";
+    }
+
+    public static String buildGenerateTestPrompt(String history) {
+        return "You are an AI Grammar Tutor. Create a comprehensive test with exactly 10 multiple-choice questions. " +
+                "Base the questions on the user's recent chat history and common mistakes found here: \n" + history + "\n" +
+                "If history is empty or insufficient, generate random beginner-to-intermediate English grammar questions. " +
+                "Return ONLY a valid JSON array. Each object MUST include: " +
+                "\"id\": integer (1-10), " +
+                "\"question\": the question text, " +
+                "\"options\": [\"A\", \"B\", \"C\", \"D\"], " +
+                "\"correctIndex\": integer (0-3), " +
+                "\"explanation\": a brief one-sentence tip. " +
+                "Use simple language.";
+    }
+
+    public static String buildCheckQuizAnswersPrompt(String history, String userAnswers) {
+        return "You are a helpful AI Grammar Tutor. A student has just attempted a quiz. " +
+                "Here is the recent conversation history for context: \n" + history + "\n" +
+                "The student's answers/input: \"" + userAnswers + "\". " +
+                "Please: " +
+                "1. Grade the answers and provide a clear SCORE (e.g., 2/3). " +
+                "2. Provide the correct answers. " +
+                "3. Give a clear explanation and a helpful tip for each question using simple English. " +
+                "Keep your response encouraging and educational.";
     }
 
     public static String buildToneDetectionPrompt(String text, String targetMode) {

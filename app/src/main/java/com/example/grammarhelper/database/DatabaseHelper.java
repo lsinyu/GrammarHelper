@@ -7,7 +7,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME    = "grammar_helper.db";
-    private static final int    DB_VERSION = 1;
+    private static final int    DB_VERSION = 2; // Incremented version
 
     // Table 1: user_sessions
     public static final String TABLE_SESSIONS = "user_sessions";
@@ -38,6 +38,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public static final String COL_CONTEXT_TEXT = "context_text";
     public static final String COL_CHAT_TIMESTAMP = "timestamp";
 
+    // Table 4: test_results
+    public static final String TABLE_TEST_RESULTS = "test_results";
+    public static final String COL_TEST_ID = "test_id";
+    public static final String COL_TEST_SCORE = "score";
+    public static final String COL_TEST_ATTEMPT = "attempt"; // 1 or 2
+    public static final String COL_TEST_TIMESTAMP = "timestamp";
+
     private static final String CREATE_SESSIONS_TABLE =
             "CREATE TABLE " + TABLE_SESSIONS + " (" +
             COL_SESSION_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -67,6 +74,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             COL_CONTEXT_TEXT + " TEXT, " +
             COL_CHAT_TIMESTAMP + " TEXT)";
 
+    private static final String CREATE_TEST_RESULTS_TABLE =
+            "CREATE TABLE " + TABLE_TEST_RESULTS + " (" +
+            COL_TEST_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            COL_TEST_SCORE + " INTEGER, " +
+            COL_TEST_ATTEMPT + " INTEGER, " +
+            COL_TEST_TIMESTAMP + " TEXT)";
+
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
@@ -76,13 +90,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL(CREATE_SESSIONS_TABLE);
         db.execSQL(CREATE_ERROR_LOG_TABLE);
         db.execSQL(CREATE_CHAT_HISTORY_TABLE);
+        db.execSQL(CREATE_TEST_RESULTS_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_SESSIONS);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_ERROR_LOG);
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_CHAT_HISTORY);
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL(CREATE_TEST_RESULTS_TABLE);
+        }
     }
 }

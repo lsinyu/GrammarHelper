@@ -1,5 +1,7 @@
 package com.example.grammarhelper.ui;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -14,16 +16,23 @@ import com.example.grammarhelper.R;
 import com.example.grammarhelper.database.ChatHistoryDAO;
 import com.example.grammarhelper.database.ErrorLogDAO;
 import com.example.grammarhelper.util.NotificationHelper;
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.switchmaterial.SwitchMaterial;
 
 public class SettingsActivity extends AppCompatActivity {
 
-    private static final String PREFS_NAME = "grammar_helper_prefs";
+    private static final String APP_PREFS = "GrammarHelperPrefs";
+    private static final String SETTINGS_PREFS = "grammar_helper_prefs";
+    private static final String KEY_IS_LOGGED_IN = "isLoggedIn";
 
     private ChatHistoryDAO chatDb;
     private ErrorLogDAO errorDb;
     private SharedPreferences prefs;
+    private GoogleSignInClient mGoogleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +43,13 @@ public class SettingsActivity extends AppCompatActivity {
         errorDb = new ErrorLogDAO(this);
         chatDb.open();
         errorDb.open();
-        prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        prefs = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+
+        // Configure Google Sign-In for logout
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
         setupToolbar();
         initViews();
@@ -162,6 +177,39 @@ public class SettingsActivity extends AppCompatActivity {
                 Toast.makeText(this, "Export feature coming soon!", Toast.LENGTH_SHORT).show();
             });
         }
+
+        // --- Log Out ---
+        MaterialButton btnLogout = findViewById(R.id.btnLogout);
+        if (btnLogout != null) {
+            btnLogout.setOnClickListener(v -> performLogout());
+        }
+    }
+
+    private void performLogout() {
+        new MaterialAlertDialogBuilder(this)
+            .setTitle("Log Out")
+            .setMessage("Are you sure you want to log out and exit?")
+            .setPositiveButton("Log Out", (dialog, which) -> {
+                // 1. Sign out from Google
+                mGoogleSignInClient.signOut().addOnCompleteListener(this, task -> {
+                    // 2. Clear login preference
+                    SharedPreferences appPrefs = getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE);
+                    appPrefs.edit().putBoolean(KEY_IS_LOGGED_IN, false).apply();
+
+                    Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+
+                    // 3. Bring user to the device main page (Home screen)
+                    Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+                    homeIntent.addCategory(Intent.CATEGORY_HOME);
+                    homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(homeIntent);
+                    
+                    // 4. Close the app
+                    finishAffinity();
+                });
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 
     @Override
