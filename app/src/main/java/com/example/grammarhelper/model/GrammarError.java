@@ -2,7 +2,7 @@ package com.example.grammarhelper.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class GrammarError {
+public class GrammarError implements java.io.Serializable {
     public int id;
     public int sessionId;
 

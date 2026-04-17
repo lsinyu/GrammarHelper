@@ -113,9 +113,9 @@ public class FloatingBubbleService extends Service {
                         windowManager.updateViewLayout(view, params);
                         return true;
                     case MotionEvent.ACTION_UP:
-                         if (Math.abs(event.getRawX() - initialTouchX) < 10 && Math.abs(event.getRawY() - initialTouchY) < 10) {
-                              v.performClick();
-                         }
+                        if (Math.abs(event.getRawX() - initialTouchX) < 10 && Math.abs(event.getRawY() - initialTouchY) < 10) {
+                            v.performClick();
+                        }
                         return true;
                 }
                 return false;
@@ -128,7 +128,7 @@ public class FloatingBubbleService extends Service {
             windowManager.removeView(panelView);
             panelView = null;
         } else {
-             showPanel();
+            showPanel();
         }
     }
 
@@ -145,11 +145,16 @@ public class FloatingBubbleService extends Service {
         Button btnDismissAll = panelView.findViewById(R.id.btn_dismiss_all);
         Button btnFixAll = panelView.findViewById(R.id.btn_fix_all);
         RecyclerView suggestionRecycler = panelView.findViewById(R.id.suggestion_recycler);
-        
+
         btnDismissAll.setOnClickListener(v -> togglePanel());
-        
+
         // Setup RecyclerView
-        ErrorCardAdapter adapter = new ErrorCardAdapter(this, currentErrors);
+        ErrorCardAdapter adapter = new ErrorCardAdapter(this, currentErrors, new ErrorCardAdapter.OnErrorActionListener() {
+            @Override
+            public void onFixClicked(GrammarError errorToFix) {
+                applySingleFix(errorToFix);
+            }
+        });
         suggestionRecycler.setLayoutManager(new LinearLayoutManager(this));
         suggestionRecycler.setAdapter(adapter);
 
@@ -160,33 +165,55 @@ public class FloatingBubbleService extends Service {
 
         windowManager.addView(panelView, panelParams);
     }
-    
+
     private void applyFixAll() {
         if (currentErrors.isEmpty() || currentText == null) return;
-        
+
         String fixedText = currentText;
         // Sort errors in reverse order of positionStart so replacing text doesn't mess up subsequent indices
         List<GrammarError> sortedErrors = new ArrayList<>(currentErrors);
         sortedErrors.sort((e1, e2) -> Integer.compare(e2.positionStart, e1.positionStart));
-        
+
         for (GrammarError error : sortedErrors) {
             if (error.positionStart >= 0 && error.positionEnd <= fixedText.length()) {
-                fixedText = fixedText.substring(0, error.positionStart) + 
-                            error.suggestion + 
-                            fixedText.substring(error.positionEnd);
+                fixedText = fixedText.substring(0, error.positionStart) +
+                        error.suggestion +
+                        fixedText.substring(error.positionEnd);
             }
         }
-        
+
         // Inject back to accessibility service
         GrammarAccessibilityService accessibilityService = GrammarAccessibilityService.getInstance();
         if (accessibilityService != null) {
             accessibilityService.injectText(fixedText);
         }
-        
+
         currentErrors.clear();
         updateBubbleUI();
     }
-    
+
+    private void applySingleFix(GrammarError error) {
+        if (currentText == null) return;
+
+
+        if (error.positionStart >= 0 && error.positionEnd <= currentText.length()) {
+            currentText = currentText.substring(0, error.positionStart) +
+                    error.suggestion +
+                    currentText.substring(error.positionEnd);
+        }
+
+
+        com.example.grammarhelper.accessibility.GrammarAccessibilityService accessibilityService = com.example.grammarhelper.accessibility.GrammarAccessibilityService.getInstance();
+        if (accessibilityService != null) {
+            accessibilityService.injectText(currentText);
+        }
+
+        togglePanel();
+
+        currentErrors.clear();
+        updateBubbleUI();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && "ANALYZE_TEXT".equals(intent.getAction())) {

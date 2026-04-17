@@ -65,6 +65,9 @@ public class SmartEditorActivity extends AppCompatActivity {
     private List<GrammarError> currentErrors = new ArrayList<>();
     private ErrorLogDAO errorLogDAO;
     private SessionDAO sessionDAO;
+    private androidx.activity.result.ActivityResultLauncher<Intent> errorReviewLauncher;
+    private List<GrammarError> resolvedErrors = new ArrayList<>();
+    private String lastSavedText = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -77,12 +80,24 @@ public class SmartEditorActivity extends AppCompatActivity {
         sessionDAO = new SessionDAO(this);
         errorLogDAO.open();
         sessionDAO.open();
+        errorReviewLauncher = registerForActivityResult(
+                new androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        // Extract the fixed errors sent back from ErrorReviewActivity
+                        ArrayList<GrammarError> returnedErrors = (ArrayList<GrammarError>) result.getData().getSerializableExtra("updated_errors");
+                        if (returnedErrors != null) {
+                            applyBatchFixes(returnedErrors);
+                        }
+                    }
+                }
+        );
 
         initViews();
         setupListeners();
         setupBottomNavigation();
         startFloatingBubbleService();
-        
+
         NotificationHelper.scheduleDailyTip(this, 8, 0);
     }
 
@@ -129,15 +144,15 @@ public class SmartEditorActivity extends AppCompatActivity {
             if (checkedId == R.id.chipAcademic) currentContextMode = "Academic";
             else if (checkedId == R.id.chipProfessional) currentContextMode = "Professional";
             else if (checkedId == R.id.chipCasual) currentContextMode = "Casual";
-            
+
             toneStatusText.setText("Tone: Analyzing for " + currentContextMode + "...");
             scheduleAnalysis();
         });
 
         chatbotFab.setOnClickListener(v -> {
-             Intent intent = new Intent(this, ChatbotActivity.class);
-             intent.putExtra("context", editorText.getText().toString());
-             startActivity(intent);
+            Intent intent = new Intent(this, ChatbotActivity.class);
+            intent.putExtra("context", editorText.getText().toString());
+            startActivity(intent);
         });
 
         btnClear.setOnClickListener(v -> {
@@ -175,9 +190,9 @@ public class SmartEditorActivity extends AppCompatActivity {
         });
 
         btnReviewPanel.setOnClickListener(v -> {
-            ErrorReviewActivity.pendingErrors = currentErrors != null ? new ArrayList<>(currentErrors) : new ArrayList<>();
             Intent intent = new Intent(this, ErrorReviewActivity.class);
-            startActivity(intent);
+            intent.putExtra("errors_list", new ArrayList<>(currentErrors));
+            errorReviewLauncher.launch(intent);
         });
 
         if (btnSettings != null) {
@@ -208,14 +223,14 @@ public class SmartEditorActivity extends AppCompatActivity {
                 intent.putExtra("context", editorText.getText().toString());
                 startActivity(intent);
                 return true;
-            } else if (id == R.id.nav_test) {
-                startActivity(new Intent(this, TestActivity.class));
-                return true;
             } else if (id == R.id.nav_errors) {
-                ErrorReviewActivity.pendingErrors = currentErrors != null ? new ArrayList<>(currentErrors) : new ArrayList<>();
-                startActivity(new Intent(this, ErrorReviewActivity.class));
+                Intent intent = new Intent(this, ErrorReviewActivity.class);
+                ArrayList<GrammarError> errorsToPass = currentErrors != null ? new ArrayList<>(currentErrors) : new ArrayList<>();
+                intent.putExtra("errors_list", errorsToPass);
+                errorReviewLauncher.launch(intent);
                 return true;
             } else if (id == R.id.nav_dashboard) {
+                saveCurrentSessionToDb();
                 startActivity(new Intent(this, DashboardActivity.class));
                 return true;
             }
@@ -238,27 +253,50 @@ public class SmartEditorActivity extends AppCompatActivity {
                 + (error.errorSubtype != null ? "(" + error.errorSubtype + ")\n\n" : "")
                 + (error.explanation != null ? error.explanation : "");
         builder.setTitle(title)
-               .setMessage(message)
-               .setPositiveButton("✅ Fix", (dialog, which) -> applyFix(error))
-               .setNegativeButton("❌ Ignore", null)
-               .setNeutralButton("? Why", (dialog, which) -> {
-                   Intent intent = new Intent(this, ChatbotActivity.class);
-                   intent.putExtra("context", error.originalText);
-                   startActivity(intent);
-               })
-               .show();
+                .setMessage(message)
+                .setPositiveButton("✅ Fix", (dialog, which) -> applyFix(error))
+                .setNegativeButton("❌ Ignore", null)
+                .setNeutralButton("? Why", (dialog, which) -> {
+                    Intent intent = new Intent(this, ChatbotActivity.class);
+                    intent.putExtra("context", error.originalText);
+                    startActivity(intent);
+                })
+                .show();
     }
 
     private void applyFix(GrammarError error) {
         isUpdatingText = true;
         android.text.Editable editable = editorText.getText();
-        if (error.positionStart >= 0 && error.positionEnd <= editable.length()) {
-            editable.replace(error.positionStart, error.positionEnd, error.suggestion);
-            error.wasAccepted = 1;
+        String currentText = editable.toString();
+
+        int start = error.positionStart;
+        int end = error.positionEnd;
+
+        boolean exactMatch = false;
+        if (start >= 0 && end <= currentText.length() && start < end) {
+            if (currentText.substring(start, end).equals(error.originalText)) {
+                exactMatch = true;
+            }
         }
+
+        if (!exactMatch) {
+            int fallbackStart = currentText.indexOf(error.originalText);
+            if (fallbackStart != -1) {
+                start = fallbackStart;
+                end = start + error.originalText.length();
+            }
+        }
+
+        if (start >= 0 && end <= editable.length() && start < end) {
+            editable.replace(start, end, error.suggestion);
+            error.wasAccepted = 1;
+            resolvedErrors.add(error);
+        }
+
+        TextHighlighter.clearHighlights(editable);
         isUpdatingText = false;
-        // Immediate re-analysis after fix
-        performAnalysis();
+        errorCountText.setText("Analyzing...");
+        scheduleAnalysis();
     }
 
     private void updateWordCount(String text) {
@@ -296,9 +334,9 @@ public class SmartEditorActivity extends AppCompatActivity {
             public void onError(String error) {
                 runOnUiThread(() -> {
                     if (error.contains("429")) {
-                         errorCountText.setText("⚠️ Slow down...");
+                        errorCountText.setText("⚠️ Slow down...");
                     } else {
-                         errorCountText.setText("❌ Offline");
+                        errorCountText.setText("❌ Offline");
                     }
                     // Reset highlights on error to avoid sticking
                     TextHighlighter.clearHighlights(editorText.getText());
@@ -360,7 +398,7 @@ public class SmartEditorActivity extends AppCompatActivity {
                 isUpdatingText = true;
                 TextHighlighter.applyHighlights(this, editorText.getText(), errors);
                 isUpdatingText = false;
-                
+
                 int wordCount = text.trim().isEmpty() ? 0 : text.split("\\s+").length;
                 int grammarScore = ScoreCalculator.calculateGrammarScore(wordCount, errors);
                 scoreText.setText("Score: " + grammarScore);
@@ -371,10 +409,13 @@ public class SmartEditorActivity extends AppCompatActivity {
 
     private void saveCurrentSessionToDb() {
         String text = editorText.getText().toString().trim();
-        if (text.isEmpty() || currentErrors == null) return;
+
+        if (text.isEmpty() || currentErrors == null || text.equals(lastSavedText)) return;
+
         int wordCount = text.split("\\s+").length;
         int grammarScore = ScoreCalculator.calculateGrammarScore(wordCount, currentErrors);
         int clarityScore = ScoreCalculator.calculateClarityScore(wordCount, currentErrors);
+
         Session session = new Session();
         session.textContent = text;
         session.grammarScore = grammarScore;
@@ -383,11 +424,63 @@ public class SmartEditorActivity extends AppCompatActivity {
         session.toneDetected = currentContextMode;
         session.wordCount = wordCount;
         session.timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(new Date());
+
         long sessionId = sessionDAO.insertSession(session);
+
         for (GrammarError error : currentErrors) {
             error.sessionId = (int) sessionId;
             errorLogDAO.insertErrorLog(error);
         }
+
+        for (GrammarError error : resolvedErrors) {
+            error.sessionId = (int) sessionId;
+            errorLogDAO.insertErrorLog(error);
+        }
+
+        resolvedErrors.clear();
+
+        lastSavedText = text;
+    }
+
+    private void applyBatchFixes(List<GrammarError> errors) {
+        isUpdatingText = true;
+        android.text.Editable editable = editorText.getText();
+        String currentText = editable.toString();
+
+        java.util.Collections.sort(errors, (e1, e2) -> Integer.compare(e2.positionStart, e1.positionStart));
+
+        for (GrammarError error : errors) {
+            if (error.wasAccepted == 1) {
+                int start = error.positionStart;
+                int end = error.positionEnd;
+
+                boolean exactMatch = false;
+                if (start >= 0 && end <= currentText.length() && start < end) {
+                    if (currentText.substring(start, end).equals(error.originalText)) {
+                        exactMatch = true;
+                    }
+                }
+
+                if (!exactMatch) {
+                    int fallbackStart = currentText.indexOf(error.originalText);
+                    if (fallbackStart != -1) {
+                        start = fallbackStart;
+                        end = start + error.originalText.length();
+                    }
+                }
+
+                if (start >= 0 && end <= editable.length() && start < end) {
+                    editable.replace(start, end, error.suggestion);
+                    resolvedErrors.add(error);
+                    currentText = editable.toString();
+                }
+            }
+        }
+
+        TextHighlighter.clearHighlights(editable);
+        isUpdatingText = false;
+        errorCountText.setText("Analyzing...");
+        scheduleAnalysis();
     }
 
     @Override

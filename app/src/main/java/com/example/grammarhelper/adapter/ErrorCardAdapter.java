@@ -19,10 +19,18 @@ public class ErrorCardAdapter extends RecyclerView.Adapter<ErrorCardAdapter.View
 
     private List<GrammarError> errors;
     private Context context;
+    private OnErrorActionListener actionListener; // 1. Add the listener variable
 
-    public ErrorCardAdapter(Context context, List<GrammarError> errors) {
+    // 2. Create the Interface
+    public interface OnErrorActionListener {
+        void onFixClicked(GrammarError error);
+    }
+
+    // 3. Update the constructor to require the listener
+    public ErrorCardAdapter(Context context, List<GrammarError> errors, OnErrorActionListener actionListener) {
         this.context = context;
         this.errors = errors;
+        this.actionListener = actionListener;
     }
 
     @NonNull
@@ -41,16 +49,10 @@ public class ErrorCardAdapter extends RecyclerView.Adapter<ErrorCardAdapter.View
         holder.suggestionText.setText(error.suggestion);
         holder.explanationText.setText(error.explanation);
 
-        // Color coding
-        if ("Clarity".equals(error.errorType)) {
-            holder.header.setTextColor(Color.parseColor("#2563EB"));
-        } else if ("Tone".equals(error.errorType)) {
-            holder.header.setTextColor(Color.parseColor("#D97706"));
-        } else if ("Engagement".equals(error.errorType)) {
-             holder.header.setTextColor(Color.parseColor("#16A34A"));
-        } else {
-             holder.header.setTextColor(Color.parseColor("#DC2626"));
-        }
+        if ("Clarity".equals(error.errorType)) holder.header.setTextColor(Color.parseColor("#2563EB"));
+        else if ("Tone".equals(error.errorType)) holder.header.setTextColor(Color.parseColor("#D97706"));
+        else if ("Engagement".equals(error.errorType)) holder.header.setTextColor(Color.parseColor("#16A34A"));
+        else holder.header.setTextColor(Color.parseColor("#DC2626"));
 
         holder.btnWhy.setOnClickListener(v -> {
             Intent intent = new Intent(context, ChatbotActivity.class);
@@ -62,14 +64,16 @@ public class ErrorCardAdapter extends RecyclerView.Adapter<ErrorCardAdapter.View
         });
 
         holder.btnFix.setOnClickListener(v -> {
-             // Logic to fix in parent
-             errors.remove(position);
-             notifyItemRemoved(position);
+            // 4. Trigger the callback instead of just removing the item
+            if (actionListener != null) {
+                actionListener.onFixClicked(error);
+            }
         });
 
         holder.btnSkip.setOnClickListener(v -> {
-             errors.remove(position);
-             notifyItemRemoved(position);
+            errors.remove(position);
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, errors.size()); // Fixes visual bugs after removal
         });
     }
 

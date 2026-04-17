@@ -77,9 +77,9 @@ public class SessionDAO {
     public int getStreakDays() {
         // Count consecutive days with sessions, working backwards from today
         Cursor cursor = db.rawQuery(
-            "SELECT DISTINCT date(" + DatabaseHelper.COL_TIMESTAMP + ") as day FROM " + 
-            DatabaseHelper.TABLE_SESSIONS + " ORDER BY day DESC", null);
-        
+                "SELECT DISTINCT date(" + DatabaseHelper.COL_TIMESTAMP + ") as day FROM " +
+                        DatabaseHelper.TABLE_SESSIONS + " ORDER BY day DESC", null);
+
         if (cursor == null || !cursor.moveToFirst()) return 0;
 
         int streak = 0;
@@ -104,9 +104,22 @@ public class SessionDAO {
                 dayCal.set(java.util.Calendar.SECOND, 0);
                 dayCal.set(java.util.Calendar.MILLISECOND, 0);
 
-                if (dayCal.equals(expected) || (streak == 0 && Math.abs(expected.getTimeInMillis() - dayCal.getTimeInMillis()) < 86400000L)) {
+                if (dayCal.equals(expected)) {
+                    // Found a match for expected day
                     streak++;
                     expected.add(java.util.Calendar.DAY_OF_YEAR, -1);
+                } else if (streak == 0) {
+                    // First iteration: check if their most recent session was yesterday
+                    java.util.Calendar yesterday = (java.util.Calendar) expected.clone();
+                    yesterday.add(java.util.Calendar.DAY_OF_YEAR, -1);
+
+                    if (dayCal.equals(yesterday)) {
+                        streak++;
+                        expected = yesterday; // Sync expected to yesterday
+                        expected.add(java.util.Calendar.DAY_OF_YEAR, -1);
+                    } else {
+                        break; // Latest session was more than 1 day ago
+                    }
                 } else {
                     break;
                 }
