@@ -229,6 +229,9 @@ public class SmartEditorActivity extends AppCompatActivity {
                 intent.putExtra("errors_list", errorsToPass);
                 errorReviewLauncher.launch(intent);
                 return true;
+            } else if (id == R.id.nav_test) {
+                startActivity(new Intent(this, TestActivity.class));
+                return true;
             } else if (id == R.id.nav_dashboard) {
                 saveCurrentSessionToDb();
                 startActivity(new Intent(this, DashboardActivity.class));
