@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Core App Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+
+    <!-- Floating Bubble Overlay -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+
+    <!-- Accessibility Service (System-Wide Text Reading) -->
+    <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE" />
+
+    <!-- Notifications (Daily Grammar Tips) -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- Prevent system from killing the Floating Bubble service -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- Alarm for scheduled notifications -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.GrammarHelper">
+
+        <!-- Main/Splash Activity -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Login Activity -->
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="false"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
+
+        <!-- Screen 1: Smart Editor -->
+        <activity
+            android:name=".ui.SmartEditorActivity"
+            android:exported="false" />
+
+        <!-- Screen 2: AI Chatbot -->
+        <activity
+            android:name=".ui.ChatbotActivity"
+            android:exported="false" />
+
+        <!-- Screen 3: Error Review -->
+        <activity
+            android:name=".ui.ErrorReviewActivity"
+            android:exported="false" />
+
+        <!-- Screen 4: Progress Dashboard -->
+        <activity
+            android:name=".ui.DashboardActivity"
+            android:exported="false" />
+
+        <!-- Screen 5: Settings -->
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false" />
+
+        <!-- Screen 6: Learning Evaluation Test -->
+        <activity
+            android:name=".ui.TestActivity"
+            android:exported="false"
+            android:label="Learning Evaluation" />
+
+        <!-- Floating Bubble Background Service -->
+        <service android:name=".service.FloatingBubbleService"
+             android:foregroundServiceType="specialUse" />
+
+        <!-- Background Grammar Analysis Worker -->
+        <service android:name=".service.GrammarAnalysisService"
+             android:exported="false" />
+
+        <!-- Accessibility Service for system-wide text reading -->
+        <service android:name=".accessibility.GrammarAccessibilityService"
+                android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
+                android:exported="true">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <!-- Daily Grammar Tip Notification Receiver -->
+        <receiver
+            android:name=".util.NotificationHelper$GrammarTipReceiver"
+            android:exported="false" />
+
+    </application>
+
+</manifest>

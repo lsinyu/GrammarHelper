@@ -1,0 +1,63 @@
+# GrammarHelper Finalization Plan
+
+This plan outlines the steps necessary to transform the current foundational codebase into the fully realized **Grammar Expert / GrammarHelper** application as defined in the **Group 20-GE Proposal**, **Ultimate Concept Document**, and **Architecture Blueprint**. 
+
+The application skeleton (MVVM folders, Gemini API connection, Room DAOs, MPAndroidChart UI, and the Floating Bubble overlay) is remarkably accurate to the spec. This phase focuses entirely on **connecting the data layer to the UI** and **polishing the interactive flows** to achieve the "Educational AI Tutor" goal.
+
+## User Review Required
+
+> [!IMPORTANT]
+> - Does this prioritization order look correct to you? (We will tackle the AI Chatbot memory and DB persistence first, as that is the core educational differentiator).
+> - Since [ErrorReviewActivity](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/ErrorReviewActivity.java#18-95) and [DashboardActivity](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/DashboardActivity.java#26-150) rely on real errors, we will replace the current mock data with actual SQLite queries to display your real grammar progress.
+> - Are there any other specific "edge cases" from the PDF proposal you want prioritized in Phase 1?
+
+---
+
+## Proposed Changes
+
+### Phase 1: AI Chatbot & Educational Tutor (The "Why")
+Currently, the ChatbotActivity sends real requests to Gemini but doesn't persist conversations long-term, nor does it dynamically pull the specific context phrase correctly when launched from an error card.
+
+- **[MODIFY] [ChatbotActivity.java](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/ChatbotActivity.java)**
+  - Implement full SQLite saving/loading using `ChatHistoryDAO`.
+  - Ensure the "Smart Quick Chips" (Explain, Rewrite, Quiz) automatically capture the `currentContextText`.
+  - Add logic to handle the `Intent` extra properly when the "Why?" button is clicked in the [ErrorReviewActivity](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/ErrorReviewActivity.java#18-95) or Editor.
+
+### Phase 2: Complete the Error Review Panel
+Currently, the Error Review Panel displays hardcoded "Mock Data" (like "The dog bark").
+
+- **[MODIFY] [ErrorReviewActivity.java](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/ErrorReviewActivity.java)**
+  - Remove all mock data.
+  - Implement logic to receive the `List<GrammarError>` via an `Intent` (Serializable/Parcelable) or a shared `ViewModel` directly from [SmartEditorActivity](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/SmartEditorActivity.java#35-204).
+  - Fix the "Fix All" button so it actually applies the corrections to the text in the Smart Editor.
+
+### Phase 3: Dashboard Analytics & Data Pipeline
+The Progress Dashboard UI (with MPAndroidCharts) is built, but it relies on placeholder logic.
+
+- **[MODIFY] [DashboardActivity.java](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/DashboardActivity.java)**
+  - Connect the [PieChart](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/DashboardActivity.java#82-115) to `errorLogDAO.getErrorDistribution()`.
+  - Connect the [LineChart](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/DashboardActivity.java#59-81) to actual `SessionDAO` historical grammar scores.
+  - Replace the static String builder in [loadTopMistakes()](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/DashboardActivity.java#116-133) with a dynamic RecyclerView or properly constrained ListView.
+  - Compute actual "Streaks" by analyzing timestamps in `SessionDAO`.
+
+### Phase 4: System Data Persistence & Settings
+We need to ensure all sessions and errors are saved accurately so the Dashboard has data to read.
+
+- **[MODIFY] [SmartEditorActivity.java](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/SmartEditorActivity.java)**
+  - Update [updateUIWithResult](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/SmartEditorActivity.java#180-203) to batch-save all detected [GrammarError](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/model/GrammarError.java#3-29) objects into `ErrorLogDAO` as soon as analysis is complete.
+  - Save the final `Session` object (with calculated grammar/clarity scores) into `SessionDAO` when the activity is destroyed or text is cleared.
+- **[MODIFY] [SettingsActivity.java](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/ui/SettingsActivity.java)** (and [Config.java](file:///c:/Users/asus/AndroidStudioProjects/GrammarHelper/app/src/main/java/com/example/grammarhelper/util/Config.java))
+  - Hook up the `SwitchMaterial` components to `SharedPreferences` so the "Daily Grammar Tip" and App Theme toggles actually apply system-wide settings.
+
+---
+
+## Verification Plan
+
+### Automated Tests
+- N/A (Focusing on integration and manual UI behavior tests based on the project proposal constraints).
+
+### Manual Verification
+1. **Chatbot Memory Test**: Open the Chatbot, type a message, close the app completely, and reopen it. Verify the chat history reappears.
+2. **Review Panel Test**: Type a sentence with 3 errors in the Smart Editor. Tap the `❌ 3 Errors` button in the toolbar. Verify the exact 3 errors appear in the Error Review list.
+3. **Analytics Test**: Fix 5 errors in the editor. Open the Dashboard. Verify the Pie Chart dynamically shows the distribution of those 5 errors, and the Line Chart updates with the session score.
+4. **Floating Bubble "Fix All" Test**: Open WhatsApp. Type "She don't like it." Wait for the bubble to turn Red. Tap it. Tap `[Fix All]`. Verify the text in WhatsApp instantly changes to "She doesn't like it."
