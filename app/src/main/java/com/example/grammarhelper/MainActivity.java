@@ -21,47 +21,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
-        // Redirect to Login if not logged in
+        // Check if logged in. If not, redirect to Login.
         if (!isLoggedIn()) {
             startActivity(new Intent(this, LoginActivity.class));
             finish();
             return;
         }
 
-        setContentView(R.layout.activity_main);
-
-        Button btnStart = findViewById(R.id.btnStart);
-        btnStart.setOnClickListener(v -> {
-            if (checkPermissions()) {
-                startActivity(new Intent(MainActivity.this, SmartEditorActivity.class));
-            }
-        });
+        // If logged in, go directly to the SmartEditor (homepage)
+        startActivity(new Intent(this, SmartEditorActivity.class));
+        finish();
     }
 
     private boolean isLoggedIn() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         return prefs.getBoolean(KEY_IS_LOGGED_IN, false);
-    }
-
-    private boolean checkPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));
-                startActivityForResult(intent, 1234);
-                return false;
-            }
-        }
-        return true;
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1234) {
-             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-                 Toast.makeText(this, "Permission Granted!", Toast.LENGTH_SHORT).show();
-             }
-        }
     }
 }
