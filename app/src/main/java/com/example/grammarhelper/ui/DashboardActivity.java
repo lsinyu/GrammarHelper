@@ -8,7 +8,9 @@ import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
@@ -17,36 +19,59 @@ import com.example.grammarhelper.adapter.BadgeAdapter;
 import com.example.grammarhelper.database.DatabaseHelper;
 import com.example.grammarhelper.database.ErrorLogDAO;
 import com.example.grammarhelper.database.SessionDAO;
+import com.example.grammarhelper.model.Session;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    private LineChart scoreLineChart, testLineChart;
+    private static final String SETTINGS_PREFS = "grammar_helper_prefs";
+    private static final String KEY_THEME = "theme_pos";
+
+    private LineChart scoreLineChart;
+    private LineChart testLineChart;
     private PieChart errorPieChart;
-    private TextView topMistakesList, streakText, userName, userStatus;
+    private TextView topMistakesList;
+    private TextView streakText;
+    private TextView userName;
+    private TextView userStatus;
     private ImageView profileImage;
     private RecyclerView badgesRecyclerView;
+
     private ErrorLogDAO errorLogDAO;
     private SessionDAO sessionDAO;
     private DatabaseHelper dbHelper;
 
+    private boolean isDarkMode;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Apply theme BEFORE super.onCreate
+        android.content.SharedPreferences prefs = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+        applyTheme(prefs.getInt(KEY_THEME, 0));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
+        // Check current theme
+        int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        isDarkMode = nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES;
+
+        // Initialize DAOs
         errorLogDAO = new ErrorLogDAO(this);
         sessionDAO = new SessionDAO(this);
         dbHelper = new DatabaseHelper(this);
@@ -62,6 +87,20 @@ public class DashboardActivity extends AppCompatActivity {
         setupPieChart();
         loadTopMistakes();
         setupBadges();
+    }
+
+    private void applyTheme(int themePos) {
+        switch (themePos) {
+            case 0: // System Default
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+            case 1: // Light Mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case 2: // Dark Mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+        }
     }
 
     private void initViews() {
@@ -129,24 +168,70 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void setupLineChart() {
         List<Entry> entries = new ArrayList<>();
-        List<com.example.grammarhelper.model.Session> sessions = sessionDAO.getAllSessions();
+        List<Session> sessions = sessionDAO.getAllSessions();
 
-        for (int i = 0; i < sessions.size(); i++) {
-            com.example.grammarhelper.model.Session s = sessions.get(sessions.size() - 1 - i);
+        int maxSessions = Math.min(20, sessions.size());
+        for (int i = 0; i < maxSessions; i++) {
+            Session s = sessions.get(i);
             entries.add(new Entry(i + 1, s.grammarScore));
         }
 
         if (entries.isEmpty()) {
-            entries.add(new Entry(1, 100));
+            scoreLineChart.setNoDataText("No data yet. Start writing!");
+            if (isDarkMode) {
+                scoreLineChart.setNoDataTextColor(Color.parseColor("#EAEAEA"));
+            } else {
+                scoreLineChart.setNoDataTextColor(Color.parseColor("#6C757D"));
+            }
+            scoreLineChart.invalidate();
+            return;
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, "Grammar Score Over Time");
-        styleLineDataSet(dataSet, "#2563EB");
+        LineDataSet dataSet = new LineDataSet(entries, "Grammar Score");
+
+        if (isDarkMode) {
+            dataSet.setColor(Color.parseColor("#60A5FA"));
+            dataSet.setCircleColor(Color.parseColor("#60A5FA"));
+            dataSet.setValueTextColor(Color.parseColor("#EAEAEA"));
+            dataSet.setFillColor(Color.parseColor("#3B82F6"));
+        } else {
+            dataSet.setColor(Color.parseColor("#2563EB"));
+            dataSet.setCircleColor(Color.parseColor("#2563EB"));
+            dataSet.setValueTextColor(Color.parseColor("#1A1A2E"));
+            dataSet.setFillColor(Color.parseColor("#2563EB"));
+        }
+
+        dataSet.setLineWidth(2f);
+        dataSet.setCircleRadius(4f);
+        dataSet.setDrawValues(true);
+        dataSet.setValueTextSize(10f);
+        dataSet.setDrawFilled(true);
+        dataSet.setFillAlpha(50);
+        dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
 
         LineData lineData = new LineData(dataSet);
         scoreLineChart.setData(lineData);
         scoreLineChart.getDescription().setEnabled(false);
         scoreLineChart.getAxisRight().setEnabled(false);
+
+        if (isDarkMode) {
+            scoreLineChart.getXAxis().setTextColor(Color.parseColor("#B0B0B8"));
+            scoreLineChart.getAxisLeft().setTextColor(Color.parseColor("#B0B0B8"));
+        } else {
+            scoreLineChart.getXAxis().setTextColor(Color.parseColor("#6C757D"));
+            scoreLineChart.getAxisLeft().setTextColor(Color.parseColor("#6C757D"));
+        }
+
+        scoreLineChart.getXAxis().setGranularity(1f);
+        scoreLineChart.getXAxis().setLabelCount(Math.min(6, maxSessions), true);
+        scoreLineChart.getAxisLeft().setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
+
+        scoreLineChart.getXAxis().setPosition(XAxis.XAxisPosition.BOTTOM);
         scoreLineChart.animateX(1000);
         scoreLineChart.invalidate();
     }
@@ -171,39 +256,67 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         if (entries.isEmpty()) {
-            testLineChart.setNoDataText("No test data available.");
+            testLineChart.setNoDataText("Take a test to see your score!");
+            if (isDarkMode) {
+                testLineChart.setNoDataTextColor(Color.parseColor("#EAEAEA"));
+            } else {
+                testLineChart.setNoDataTextColor(Color.parseColor("#6C757D"));
+            }
             testLineChart.invalidate();
             return;
         }
 
-        LineDataSet dataSet = new LineDataSet(entries, "Evaluation Scores");
-        styleLineDataSet(dataSet, "#DC2626");
+        LineDataSet dataSet = new LineDataSet(entries, "Test Scores");
 
-        LineData lineData = new LineData(dataSet);
-        testLineChart.setData(lineData);
-        testLineChart.getDescription().setEnabled(false);
-        testLineChart.getAxisRight().setEnabled(false);
-        testLineChart.animateX(1000);
-        testLineChart.invalidate();
-    }
+        if (isDarkMode) {
+            dataSet.setColor(Color.parseColor("#F87171"));
+            dataSet.setCircleColor(Color.parseColor("#F87171"));
+            dataSet.setValueTextColor(Color.parseColor("#EAEAEA"));
+            dataSet.setFillColor(Color.parseColor("#EF4444"));
+        } else {
+            dataSet.setColor(Color.parseColor("#DC2626"));
+            dataSet.setCircleColor(Color.parseColor("#DC2626"));
+            dataSet.setValueTextColor(Color.parseColor("#1A1A2E"));
+            dataSet.setFillColor(Color.parseColor("#DC2626"));
+        }
 
-    private void styleLineDataSet(LineDataSet dataSet, String colorHex) {
-        int color = Color.parseColor(colorHex);
-        dataSet.setColor(color);
-        dataSet.setCircleColor(color);
         dataSet.setLineWidth(2f);
         dataSet.setCircleRadius(4f);
         dataSet.setDrawValues(true);
         dataSet.setValueTextSize(10f);
         dataSet.setDrawFilled(true);
-        dataSet.setFillColor(color);
-        dataSet.setFillAlpha(30);
+        dataSet.setFillAlpha(50);
         dataSet.setMode(LineDataSet.Mode.CUBIC_BEZIER);
+
+        LineData lineData = new LineData(dataSet);
+        testLineChart.setData(lineData);
+        testLineChart.getDescription().setEnabled(false);
+        testLineChart.getAxisRight().setEnabled(false);
+
+        if (isDarkMode) {
+            testLineChart.getXAxis().setTextColor(Color.parseColor("#B0B0B8"));
+            testLineChart.getAxisLeft().setTextColor(Color.parseColor("#B0B0B8"));
+        } else {
+            testLineChart.getXAxis().setTextColor(Color.parseColor("#6C757D"));
+            testLineChart.getAxisLeft().setTextColor(Color.parseColor("#6C757D"));
+        }
+
+        testLineChart.getXAxis().setGranularity(1f);
+        testLineChart.getAxisLeft().setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return String.valueOf((int) value);
+            }
+        });
+
+        testLineChart.animateX(1000);
+        testLineChart.invalidate();
     }
 
     private void setupPieChart() {
         List<PieEntry> entries = new ArrayList<>();
         Cursor cursor = errorLogDAO.getErrorDistribution();
+
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 String type = cursor.getString(0);
@@ -219,18 +332,41 @@ public class DashboardActivity extends AppCompatActivity {
         }
 
         PieDataSet dataSet = new PieDataSet(entries, "Error Patterns");
+
         int[] colors = {
-                Color.parseColor("#DC2626"),
-                Color.parseColor("#2563EB"),
-                Color.parseColor("#D97706"),
-                Color.parseColor("#16A34A")
+                Color.parseColor("#EF4444"),
+                Color.parseColor("#3B82F6"),
+                Color.parseColor("#F97316"),
+                Color.parseColor("#8B5CF6")
         };
         dataSet.setColors(colors);
-        dataSet.setValueTextColor(Color.WHITE);
+
         dataSet.setValueTextSize(12f);
+
+        // Set percentage text color
+        if (isDarkMode) {
+            dataSet.setValueTextColor(Color.parseColor("#EAEAEA"));
+        } else {
+            dataSet.setValueTextColor(Color.parseColor("#1A1A2E"));
+        }
 
         PieData pieData = new PieData(dataSet);
         errorPieChart.setData(pieData);
+
+        // Set colors based on theme
+        if (isDarkMode) {
+            errorPieChart.setCenterTextColor(Color.parseColor("#EAEAEA"));
+            errorPieChart.setHoleColor(Color.parseColor("#121212"));
+            // MAKE LEGEND LABELS WHITE
+            errorPieChart.setEntryLabelColor(Color.WHITE);
+            errorPieChart.getLegend().setTextColor(Color.WHITE);
+        } else {
+            errorPieChart.setCenterTextColor(Color.parseColor("#1A1A2E"));
+            errorPieChart.setHoleColor(Color.parseColor("#FFFFFF"));
+            errorPieChart.setEntryLabelColor(Color.parseColor("#1A1A2E"));
+            errorPieChart.getLegend().setTextColor(Color.parseColor("#1A1A2E"));
+        }
+
         errorPieChart.setCenterText("Errors");
         errorPieChart.setCenterTextSize(14f);
         errorPieChart.getDescription().setEnabled(false);
@@ -244,16 +380,17 @@ public class DashboardActivity extends AppCompatActivity {
         StringBuilder sb = new StringBuilder();
         Cursor cursor = errorLogDAO.getTopMistakes();
         int rank = 1;
+
         if (cursor != null && cursor.moveToFirst()) {
             do {
                 String subtype = cursor.getString(0);
                 int count = cursor.getInt(1);
-                sb.append(rank).append(". ").append(subtype).append("   ").append(count).append("×\n");
+                sb.append(rank).append(". ").append(subtype).append("   ").append(count).append("×\n\n");
                 rank++;
             } while (cursor.moveToNext());
             cursor.close();
         } else {
-            sb.append("No errors recorded yet.");
+            sb.append("No errors recorded yet.\n\nStart writing to see your progress!");
         }
         topMistakesList.setText(sb.toString());
     }

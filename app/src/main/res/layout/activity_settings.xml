@@ -102,22 +102,6 @@
                 android:layout_marginVertical="16dp"
                 android:background="#DDDDDD" />
 
-            <!-- Floating Bubble -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="── Floating Bubble ──"
-                android:textColor="@color/primary"
-                android:textStyle="bold"
-                android:textSize="14sp" />
-
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/switchBubble"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:text="Enable Floating Bubble"
-                android:checked="true" />
 
             <View
                 android:layout_width="match_parent"

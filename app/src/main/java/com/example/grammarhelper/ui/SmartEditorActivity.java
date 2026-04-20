@@ -4,23 +4,21 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.text.Editable;
-import android.text.InputType;
-import android.text.SpannableString;
 import android.text.TextWatcher;
-import android.util.Log;
-import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.content.ContextCompat;
 import com.example.grammarhelper.R;
 import com.example.grammarhelper.ai.GeminiApiClient;
 import com.example.grammarhelper.ai.GrammarResponseParser;
@@ -29,7 +27,6 @@ import com.example.grammarhelper.database.ErrorLogDAO;
 import com.example.grammarhelper.database.SessionDAO;
 import com.example.grammarhelper.model.GrammarError;
 import com.example.grammarhelper.model.Session;
-import com.example.grammarhelper.service.FloatingBubbleService;
 import com.example.grammarhelper.util.NotificationHelper;
 import com.example.grammarhelper.util.ScoreCalculator;
 import com.example.grammarhelper.util.TextHighlighter;
@@ -44,9 +41,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+
 public class SmartEditorActivity extends AppCompatActivity {
 
     private static final String TAG = "SmartEditorActivity";
+    private static final String SETTINGS_PREFS = "grammar_helper_prefs";
+    private static final String KEY_THEME = "theme_pos";
 
     private EditText editorText;
     private TextView scoreText, errorCountText, wordCountText, toneStatusText;
@@ -71,6 +71,10 @@ public class SmartEditorActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Apply theme BEFORE super.onCreate
+        SharedPreferences prefs = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+        applyTheme(prefs.getInt(KEY_THEME, 0));
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_smart_editor);
 
@@ -96,9 +100,22 @@ public class SmartEditorActivity extends AppCompatActivity {
         initViews();
         setupListeners();
         setupBottomNavigation();
-        startFloatingBubbleService();
 
         NotificationHelper.scheduleDailyTip(this, 8, 0);
+    }
+
+    private void applyTheme(int themePos) {
+        switch (themePos) {
+            case 0: // System Default
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+            case 1: // Light Mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case 2: // Dark Mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+        }
     }
 
     private void initViews() {
@@ -160,7 +177,7 @@ public class SmartEditorActivity extends AppCompatActivity {
             editorText.setText("");
             currentErrors.clear();
             scoreText.setText("Score: 100");
-            errorCountText.setText("❌ 0 Errors");
+            errorCountText.setText("✅ No Errors");
             toneStatusText.setText("Tone: Ready to analyze");
             TextHighlighter.clearHighlights(editorText.getText());
         });
@@ -241,14 +258,6 @@ public class SmartEditorActivity extends AppCompatActivity {
         });
     }
 
-    private void startFloatingBubbleService() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-            Intent serviceIntent = new Intent(this, FloatingBubbleService.class);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(serviceIntent);
-            else startService(serviceIntent);
-        }
-    }
-
     private void showSuggestionPopup(GrammarError error) {
         com.google.android.material.dialog.MaterialAlertDialogBuilder builder = new com.google.android.material.dialog.MaterialAlertDialogBuilder(this);
         String title = "❌ " + (error.errorType != null ? error.errorType : "Grammar Error");
@@ -311,7 +320,7 @@ public class SmartEditorActivity extends AppCompatActivity {
     private void scheduleAnalysis() {
         if (analysisRunnable != null) analysisHandler.removeCallbacks(analysisRunnable);
         analysisRunnable = () -> performAnalysis();
-        analysisHandler.postDelayed(analysisRunnable, 1500); // Increased debounce to avoid 429
+        analysisHandler.postDelayed(analysisRunnable, 1500);
     }
 
     private void performAnalysis() {
@@ -319,7 +328,7 @@ public class SmartEditorActivity extends AppCompatActivity {
         if (text.trim().isEmpty()) {
             runOnUiThread(() -> {
                 currentErrors.clear();
-                errorCountText.setText("❌ 0 Errors");
+                errorCountText.setText("✅ No Errors");
                 scoreText.setText("Score: 100");
                 TextHighlighter.clearHighlights(editorText.getText());
             });
@@ -341,7 +350,6 @@ public class SmartEditorActivity extends AppCompatActivity {
                     } else {
                         errorCountText.setText("❌ Offline");
                     }
-                    // Reset highlights on error to avoid sticking
                     TextHighlighter.clearHighlights(editorText.getText());
                 });
             }
@@ -367,7 +375,7 @@ public class SmartEditorActivity extends AppCompatActivity {
                             boolean isMatch = toneJson.optBoolean("isMatch", false);
                             String toneEmoji = getToneEmoji(tone);
                             String status = isMatch ? "✅ Match" : "⚠️ Needs work";
-                            toneStatusText.setText("Tone: " + toneEmoji + " " + tone + " | " + formality + " Formality | " + status);
+                            toneStatusText.setText("Tone: " + toneEmoji + " " + tone + " | " + formality + " | " + status);
                         }
                     } catch (JSONException e) {
                         toneStatusText.setText("Tone: " + currentContextMode + " | ✅ Analyzed");
@@ -385,6 +393,7 @@ public class SmartEditorActivity extends AppCompatActivity {
         switch (tone.toLowerCase()) {
             case "academic": return "📘";
             case "formal": return "💼";
+            case "professional": return "💼";
             case "friendly": return "😊";
             case "assertive": return "💪";
             case "blunt": return "🔨";
@@ -397,6 +406,7 @@ public class SmartEditorActivity extends AppCompatActivity {
     private void updateUIWithResult(String text, List<GrammarError> errors) {
         runOnUiThread(() -> {
             String currentText = editorText.getText().toString();
+
             if (currentText.equals(text)) {
                 isUpdatingText = true;
                 TextHighlighter.applyHighlights(this, editorText.getText(), errors);
@@ -404,8 +414,25 @@ public class SmartEditorActivity extends AppCompatActivity {
 
                 int wordCount = text.trim().isEmpty() ? 0 : text.split("\\s+").length;
                 int grammarScore = ScoreCalculator.calculateGrammarScore(wordCount, errors);
-                scoreText.setText("Score: " + grammarScore);
-                errorCountText.setText("❌ " + errors.size() + " Errors");
+                String letterGrade = ScoreCalculator.getLetterGrade(grammarScore);
+                String feedback = ScoreCalculator.getScoreFeedback(grammarScore);
+
+                scoreText.setText("Score: " + grammarScore + " (" + letterGrade + ")");
+
+                if (grammarScore >= 95 && errors.size() > 0) {
+                    errorCountText.setText("✨ " + errors.size() + " minor suggestions");
+                    errorCountText.setTextColor(ContextCompat.getColor(this, R.color.success_green));
+                } else if (errors.size() > 0) {
+                    errorCountText.setText("❌ " + errors.size() + " Errors");
+                    errorCountText.setTextColor(ContextCompat.getColor(this, R.color.error_red));
+                } else {
+                    errorCountText.setText("✅ No Errors");
+                    errorCountText.setTextColor(ContextCompat.getColor(this, R.color.success_green));
+                }
+
+                if (grammarScore < 60) {
+                    Toast.makeText(SmartEditorActivity.this, feedback, Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -441,7 +468,6 @@ public class SmartEditorActivity extends AppCompatActivity {
         }
 
         resolvedErrors.clear();
-
         lastSavedText = text;
     }
 

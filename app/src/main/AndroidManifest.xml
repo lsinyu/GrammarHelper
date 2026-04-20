@@ -2,23 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Core App Permissions -->
+    <!-- Permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
-
-    <!-- Floating Bubble Overlay -->
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-
-    <!-- Notifications (Daily Grammar Tips) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-
-    <!-- Prevent system from killing the Floating Bubble service -->
-    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-
-    <!-- Alarm for scheduled notifications -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
@@ -31,9 +23,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GrammarHelper">
 
-        <!-- Main/Splash Activity -->
+        <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="uiMode|orientation|screenSize|keyboardHidden"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -44,64 +37,67 @@
         <!-- Login Activity -->
         <activity
             android:name=".ui.LoginActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false"
             android:theme="@style/Theme.MaterialComponents.Light.NoActionBar" />
 
-        <!-- Screen 1: Smart Editor -->
+        <!-- Smart Editor Activity -->
         <activity
             android:name=".ui.SmartEditorActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 
-        <!-- Screen 2: AI Chatbot -->
+        <!-- Chatbot Activity -->
         <activity
             android:name=".ui.ChatbotActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 
-        <!-- Screen 3: Error Review -->
+        <!-- Error Review Activity -->
         <activity
             android:name=".ui.ErrorReviewActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 
-        <!-- Screen 4: Progress Dashboard -->
+        <!-- Dashboard Activity -->
         <activity
             android:name=".ui.DashboardActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 
-        <!-- Screen 5: Settings -->
+        <!-- Settings Activity -->
         <activity
             android:name=".ui.SettingsActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false" />
 
-        <!-- Screen 6: Learning Evaluation Test -->
+        <!-- Test Activity -->
         <activity
             android:name=".ui.TestActivity"
+            android:configChanges="uiMode|orientation|screenSize"
             android:exported="false"
             android:label="Learning Evaluation" />
 
-        <!-- Floating Bubble Background Service -->
-        <service android:name=".service.FloatingBubbleService"
-            android:foregroundServiceType="specialUse" />
-
-        <!-- Background Grammar Analysis Worker -->
-        <service android:name=".service.GrammarAnalysisService"
+        <!-- Services -->
+        <service
+            android:name=".service.GrammarAnalysisService"
             android:exported="false" />
 
-        <!-- Accessibility Service for system-wide text reading -->
-        <service android:name=".accessibility.GrammarAccessibilityService"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService" />
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config" />
-        </service>
-
-        <!-- Daily Grammar Tip Notification Receiver -->
+        <!-- Receivers -->
         <receiver
             android:name=".util.NotificationHelper$GrammarTipReceiver"
             android:exported="false" />
+
+        <!-- File Provider -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 

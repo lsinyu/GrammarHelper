@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light Theme Colors (overridden for dark mode) -->
+    <color name="light_background">#121212</color>
+    <color name="light_surface">#1E1E2E</color>
+    <color name="light_primary_text">#EAEAEA</color>
+    <color name="light_secondary_text">#B0B0B8</color>
+    <color name="light_card">#2A2A3E</color>
+    <color name="light_hint">#808088</color>
+
+    <!-- Dark Theme Colors -->
+    <color name="dark_background">#121212</color>
+    <color name="dark_surface">#1E1E2E</color>
+    <color name="dark_primary_text">#EAEAEA</color>
+    <color name="dark_secondary_text">#B0B0B8</color>
+    <color name="dark_card">#2A2A3E</color>
+    <color name="dark_border">#3A3A4A</color>
+    <color name="dark_hint">#808088</color>
+
+    <!-- Error Highlight Colors (brighter for dark mode) -->
+    <color name="error_red">#EF4444</color>
+    <color name="success_green">#22C55E</color>
+    <color name="warning_yellow">#F59E0B</color>
+    <color name="clarity_blue">#60A5FA</color>
+    <color name="tone_orange">#FB923C</color>
+    <color name="engagement_purple">#A78BFA</color>
+
+    <!-- Material Colors for Dark Mode -->
+    <color name="background">#121212</color>
+    <color name="surface">#1E1E2E</color>
+    <color name="primary">#BB86FC</color>
+    <color name="accent">#03DAC5</color>
+    <color name="text_primary">#EAEAEA</color>
+    <color name="text_secondary">#B0B0B8</color>
+
+    <color name="purple_500">#BB86FC</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#03DAC5</color>
+    <color name="teal_700">#018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

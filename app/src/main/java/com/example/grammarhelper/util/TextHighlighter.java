@@ -53,7 +53,7 @@ public class TextHighlighter {
             case "clarity":
                 return ContextCompat.getColor(context, R.color.clarity_blue);
             case "tone":
-                return ContextCompat.getColor(context, R.color.tone_yellow);
+                return ContextCompat.getColor(context, R.color.tone_orange);
             case "engagement":
                 return ContextCompat.getColor(context, R.color.success_green);
             default:

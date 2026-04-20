@@ -1,16 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Light Theme Colors -->
+    <color name="light_background">#FFFFFF</color>
+    <color name="light_surface">#F8F9FA</color>
+    <color name="light_primary_text">#1A1A2E</color>
+    <color name="light_secondary_text">#6C757D</color>
+    <color name="light_card">#FFFFFF</color>
+    <color name="light_hint">#9E9E9E</color>
+
+    <!-- Dark Theme Colors (reference only) -->
+    <color name="dark_background">#121212</color>
+    <color name="dark_surface">#1E1E2E</color>
+    <color name="dark_primary_text">#EAEAEA</color>
+    <color name="dark_secondary_text">#B0B0B8</color>
+    <color name="dark_card">#2A2A3E</color>
+    <color name="dark_border">#3A3A4A</color>
+    <color name="dark_hint">#808088</color>
+
+    <!-- Error Highlight Colors -->
+    <color name="error_red">#DC2626</color>
+    <color name="success_green">#16A34A</color>
+    <color name="warning_yellow">#D97706</color>
+    <color name="clarity_blue">#3B82F6</color>
+    <color name="tone_orange">#F97316</color>
+    <color name="engagement_purple">#8B5CF6</color>
+
+    <!-- Material Colors -->
+    <color name="purple_500">#6200EE</color>
+    <color name="purple_700">#3700B3</color>
+    <color name="teal_200">#03DAC5</color>
+    <color name="teal_700">#018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="primary">#2563EB</color>
-    <color name="primary_dark">#1D4ED8</color>
-    <color name="accent">#7C3AED</color>
-    <color name="error_red">#DC2626</color>
-    <color name="clarity_blue">#2563EB</color>
-    <color name="tone_yellow">#D97706</color>
-    <color name="success_green">#16A34A</color>
-    <color name="surface">#F8FAFC</color>
     <color name="background">#FFFFFF</color>
-    <color name="text_primary">#0F172A</color>
-    <color name="text_secondary">#64748B</color>
+    <color name="surface">#F8F9FA</color>
+    <color name="primary">#6200EE</color>
+    <color name="accent">#03DAC5</color>
+    <color name="text_primary">#1A1A2E</color>
+    <color name="text_secondary">#6C757D</color>
 </resources>

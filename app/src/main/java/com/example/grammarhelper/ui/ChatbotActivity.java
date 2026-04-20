@@ -48,6 +48,8 @@ public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatbot);
 
@@ -66,6 +68,7 @@ public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.On
             addBotMessage("Hello! I am your AI Grammar Tutor. How can I help you improve your writing today?");
         }
     }
+
 
     private void initViews() {
         toolbar = findViewById(R.id.chatbotToolbar);
