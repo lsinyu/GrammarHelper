@@ -211,8 +211,6 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-
-
         // --- Log Out ---
         MaterialButton btnLogout = findViewById(R.id.btnLogout);
         if (btnLogout != null) {
