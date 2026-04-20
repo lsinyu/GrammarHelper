@@ -201,9 +201,18 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             });
 
             // Quick style switch buttons
-            botHolder.btnStyleProf.setOnClickListener(v -> { rewriteIndices.put(position, 0); updateRewriteUI(botHolder, rewrites, position); });
-            botHolder.btnStyleCasual.setOnClickListener(v -> { rewriteIndices.put(position, 1); updateRewriteUI(botHolder, rewrites, position); });
-            botHolder.btnStyleShort.setOnClickListener(v -> { rewriteIndices.put(position, 2); updateRewriteUI(botHolder, rewrites, position); });
+            botHolder.btnStyleProf.setOnClickListener(v -> {
+                rewriteIndices.put(position, 0);
+                updateRewriteUI(botHolder, rewrites, position);
+            });
+            botHolder.btnStyleCasual.setOnClickListener(v -> {
+                rewriteIndices.put(position, 1);
+                updateRewriteUI(botHolder, rewrites, position);
+            });
+            botHolder.btnStyleShort.setOnClickListener(v -> {
+                rewriteIndices.put(position, 2);
+                updateRewriteUI(botHolder, rewrites, position);
+            });
 
             // Copy button logic
             botHolder.btnCopyRewrite.setOnClickListener(v -> {
@@ -240,20 +249,21 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         return messages.size();
     }
 
+    // User ViewHolder - White text on purple background
     static class UserViewHolder extends RecyclerView.ViewHolder {
         TextView userText;
+
         UserViewHolder(View itemView) {
             super(itemView);
             userText = itemView.findViewById(R.id.chatUserText);
         }
     }
 
+    // Bot ViewHolder - Theme-aware text color
     static class BotViewHolder extends RecyclerView.ViewHolder {
         TextView botText;
         LinearLayout quizContainer;
         Button btnSubmitQuiz;
-
-        // Rewrite UI components
         LinearLayout rewriteContainer;
         TextView rewriteTitle, rewriteContent, rewritePagerInfo;
         Button btnPrevRewrite, btnNextRewrite;
@@ -265,7 +275,6 @@ public class ChatAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             botText = itemView.findViewById(R.id.chatBotText);
             quizContainer = itemView.findViewById(R.id.quizContainer);
             btnSubmitQuiz = itemView.findViewById(R.id.btnSubmitQuiz);
-
             rewriteContainer = itemView.findViewById(R.id.rewriteContainer);
             rewriteTitle = itemView.findViewById(R.id.rewriteTitle);
             rewriteContent = itemView.findViewById(R.id.rewriteContent);

@@ -211,11 +211,7 @@ public class SettingsActivity extends AppCompatActivity {
             });
         }
 
-        // --- PDF Export Button ---
-        Button btnExport = findViewById(R.id.btnExportPdf);
-        if (btnExport != null) {
-            btnExport.setOnClickListener(v -> exportPDFReport());
-        }
+
 
         // --- Log Out ---
         MaterialButton btnLogout = findViewById(R.id.btnLogout);

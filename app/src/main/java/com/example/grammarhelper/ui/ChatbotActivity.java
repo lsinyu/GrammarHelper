@@ -1,6 +1,7 @@
 package com.example.grammarhelper.ui;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,6 +33,8 @@ import java.util.Locale;
 public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.OnQuizSubmitListener {
     private static final String TAG = "ChatbotActivity";
     private static final int SPEECH_REQUEST_CODE = 100;
+    private static final String SETTINGS_PREFS = "grammar_helper_prefs";
+    private static final String KEY_THEME = "theme_pos";
 
     private RecyclerView chatRecyclerView;
     private ChatAdapter chatAdapter;
@@ -48,7 +52,9 @@ public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.On
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
+        // Apply theme BEFORE super.onCreate
+        SharedPreferences prefs = getSharedPreferences(SETTINGS_PREFS, MODE_PRIVATE);
+        applyTheme(prefs.getInt(KEY_THEME, 0));
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chatbot);
@@ -69,6 +75,19 @@ public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.On
         }
     }
 
+    private void applyTheme(int themePos) {
+        switch (themePos) {
+            case 0: // System Default
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+            case 1: // Light Mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case 2: // Dark Mode
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+        }
+    }
 
     private void initViews() {
         toolbar = findViewById(R.id.chatbotToolbar);
@@ -109,16 +128,16 @@ public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.On
         if (btnClearChat != null) {
             btnClearChat.setOnClickListener(v -> {
                 new MaterialAlertDialogBuilder(this)
-                    .setTitle("Clear Chat History")
-                    .setMessage("Are you sure you want to clear all chat history?")
-                    .setPositiveButton("Clear", (dialog, which) -> {
-                        db.clearHistory();
-                        chatAdapter.setMessages(new java.util.ArrayList<>());
-                        addBotMessage("Chat history cleared. How can I help you?");
-                        Toast.makeText(this, "Chat history cleared", Toast.LENGTH_SHORT).show();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+                        .setTitle("Clear Chat History")
+                        .setMessage("Are you sure you want to clear all chat history?")
+                        .setPositiveButton("Clear", (dialog, which) -> {
+                            db.clearHistory();
+                            chatAdapter.setMessages(new java.util.ArrayList<>());
+                            addBotMessage("Chat history cleared. How can I help you?");
+                            Toast.makeText(this, "Chat history cleared", Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
             });
         }
     }
@@ -172,7 +191,7 @@ public class ChatbotActivity extends AppCompatActivity implements ChatAdapter.On
 
         String lowerMessage = message.toLowerCase();
         String prompt;
-        
+
         if (isWaitingForRewriteText) {
             prompt = PromptBuilder.buildRewriteStylesPrompt(message);
             isWaitingForRewriteText = false;

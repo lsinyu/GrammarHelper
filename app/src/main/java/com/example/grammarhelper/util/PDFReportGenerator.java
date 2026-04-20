@@ -32,6 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class PDFReportGenerator {
 
@@ -51,8 +52,12 @@ public class PDFReportGenerator {
         sessionDAO.open();
         errorLogDAO.open();
 
-        // Create filename with timestamp
-        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+        // Get CURRENT date and time
+        Date currentDate = new Date();
+
+        // Create filename with current timestamp (24-hour format for filename)
+        SimpleDateFormat fileDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
+        String timestamp = fileDateFormat.format(currentDate);
         String fileName = "GrammarHelper_Report_" + timestamp + ".pdf";
 
         File pdfFile = new File(context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS), fileName);
@@ -75,8 +80,12 @@ public class PDFReportGenerator {
                 .setFontColor(new DeviceRgb(37, 99, 235));
         document.add(title);
 
-        // Date
-        String dateStr = new SimpleDateFormat("MMMM dd, yyyy 'at' hh:mm a", Locale.getDefault()).format(new Date());
+        // 使用马来西亚时区 (UTC+8)
+        TimeZone malaysiaTimeZone = TimeZone.getTimeZone("Asia/Kuala_Lumpur");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM dd, yyyy 'at' HH:mm:ss", Locale.getDefault());
+        dateFormat.setTimeZone(malaysiaTimeZone);
+
+        String dateStr = dateFormat.format(currentDate);
         Paragraph datePara = new Paragraph("Generated: " + dateStr)
                 .setFont(regularFont)
                 .setFontSize(10)
@@ -100,6 +109,7 @@ public class PDFReportGenerator {
 
         addUserRow(userTable, "Name:", userName, regularFont);
         addUserRow(userTable, "Report ID:", "GH-" + timestamp, regularFont);
+        addUserRow(userTable, "Generated:", dateStr, regularFont);
 
         document.add(userTable);
         document.add(new Paragraph("\n"));
@@ -227,7 +237,8 @@ public class PDFReportGenerator {
         int showCount = Math.min(10, sessions.size());
         for (int i = 0; i < showCount; i++) {
             Session s = sessions.get(i);
-            sessionsTable.addCell(new Cell().add(new Paragraph(s.timestamp != null ? s.timestamp.substring(0, 16) : "N/A").setFont(regularFont)));
+            String sessionDate = s.timestamp != null ? s.timestamp.substring(0, 16) : "N/A";
+            sessionsTable.addCell(new Cell().add(new Paragraph(sessionDate).setFont(regularFont)));
             sessionsTable.addCell(new Cell().add(new Paragraph(String.valueOf(s.grammarScore)).setFont(regularFont)));
             sessionsTable.addCell(new Cell().add(new Paragraph(String.valueOf(s.wordCount)).setFont(regularFont)));
             sessionsTable.addCell(new Cell().add(new Paragraph(s.toneDetected != null ? s.toneDetected : "N/A").setFont(regularFont)));

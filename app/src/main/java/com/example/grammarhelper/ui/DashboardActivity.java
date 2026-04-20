@@ -1,16 +1,27 @@
 package com.example.grammarhelper.ui;
 
+import android.app.ProgressDialog;
+import android.content.ContentValues;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
 import android.view.MenuItem;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
@@ -20,6 +31,7 @@ import com.example.grammarhelper.database.DatabaseHelper;
 import com.example.grammarhelper.database.ErrorLogDAO;
 import com.example.grammarhelper.database.SessionDAO;
 import com.example.grammarhelper.model.Session;
+import com.example.grammarhelper.util.PDFReportGenerator;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.XAxis;
@@ -32,7 +44,11 @@ import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,6 +96,7 @@ public class DashboardActivity extends AppCompatActivity {
         sessionDAO.open();
 
         initViews();
+        setupPDFExport();  // PDF button setup
         setupUserProfile();
         setupStreak();
         setupLineChart();
@@ -91,13 +108,13 @@ public class DashboardActivity extends AppCompatActivity {
 
     private void applyTheme(int themePos) {
         switch (themePos) {
-            case 0: // System Default
+            case 0:
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 break;
-            case 1: // Light Mode
+            case 1:
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 break;
-            case 2: // Dark Mode
+            case 2:
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 break;
         }
@@ -137,6 +154,138 @@ public class DashboardActivity extends AppCompatActivity {
         }
     }
 
+    private void setupPDFExport() {
+        ImageButton btnExportPDF = findViewById(R.id.btnExportPDF);
+        if (btnExportPDF != null) {
+            btnExportPDF.setOnClickListener(v -> exportPDFReport());
+        }
+    }
+
+    private void exportPDFReport() {
+        ProgressDialog progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Generating PDF report...");
+        progressDialog.setCancelable(false);
+        progressDialog.show();
+
+        new Thread(() -> {
+            try {
+                PDFReportGenerator generator = new PDFReportGenerator(this);
+                File pdfFile = generator.generateReport();
+
+                runOnUiThread(() -> {
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+
+                    if (pdfFile != null && pdfFile.exists()) {
+                        showExportOptions(pdfFile);
+                    } else {
+                        Toast.makeText(this, "Failed to generate report", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+                runOnUiThread(() -> {
+                    if (progressDialog.isShowing()) {
+                        progressDialog.dismiss();
+                    }
+                    Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+            }
+        }).start();
+    }
+
+    private void showExportOptions(File pdfFile) {
+        String[] options = {"Share PDF", "Save to Device", "Open PDF"};
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Export Report")
+                .setItems(options, (dialog, which) -> {
+                    switch (which) {
+                        case 0:
+                            sharePDF(pdfFile);
+                            break;
+                        case 1:
+                            savePDFToDownloads(pdfFile);
+                            break;
+                        case 2:
+                            openPDF(pdfFile);
+                            break;
+                    }
+                })
+                .show();
+    }
+
+    private void sharePDF(File pdfFile) {
+        Uri pdfUri = FileProvider.getUriForFile(this,
+                getPackageName() + ".fileprovider", pdfFile);
+
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("application/pdf");
+        shareIntent.putExtra(Intent.EXTRA_STREAM, pdfUri);
+        shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        startActivity(Intent.createChooser(shareIntent, "Share Report via"));
+    }
+
+    private void savePDFToDownloads(File pdfFile) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, pdfFile.getName());
+            values.put(MediaStore.MediaColumns.MIME_TYPE, "application/pdf");
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+
+            Uri uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+
+            try (ParcelFileDescriptor fd = getContentResolver().openFileDescriptor(uri, "w");
+                 FileOutputStream out = new FileOutputStream(fd.getFileDescriptor());
+                 FileInputStream in = new FileInputStream(pdfFile)) {
+
+                byte[] buffer = new byte[8192];
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
+
+                Toast.makeText(this, "PDF saved to Downloads folder", Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File destFile = new File(downloadsDir, pdfFile.getName());
+
+            try (FileInputStream in = new FileInputStream(pdfFile);
+                 FileOutputStream out = new FileOutputStream(destFile)) {
+
+                byte[] buffer = new byte[8192];
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
+
+                Toast.makeText(this, "PDF saved to: " + destFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Toast.makeText(this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void openPDF(File pdfFile) {
+        Uri pdfUri = FileProvider.getUriForFile(this,
+                getPackageName() + ".fileprovider", pdfFile);
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setDataAndType(pdfUri, "application/pdf");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+        try {
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "No PDF viewer app found", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void setupUserProfile() {
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
         if (account != null) {
@@ -171,9 +320,10 @@ public class DashboardActivity extends AppCompatActivity {
         List<Session> sessions = sessionDAO.getAllSessions();
 
         int maxSessions = Math.min(20, sessions.size());
-        for (int i = 0; i < maxSessions; i++) {
+        // Reverse order - newest on right
+        for (int i = maxSessions - 1; i >= 0; i--) {
             Session s = sessions.get(i);
-            entries.add(new Entry(i + 1, s.grammarScore));
+            entries.add(new Entry(maxSessions - i, s.grammarScore));
         }
 
         if (entries.isEmpty()) {
@@ -246,16 +396,15 @@ public class DashboardActivity extends AppCompatActivity {
                 new String[]{DatabaseHelper.COL_TEST_SCORE},
                 null, null, null, null, DatabaseHelper.COL_TEST_TIMESTAMP + " ASC");
 
-        int index = 1;
+        List<Integer> scores = new ArrayList<>();
         if (cursor != null && cursor.moveToFirst()) {
             do {
-                int score = cursor.getInt(0);
-                entries.add(new Entry(index++, score));
+                scores.add(cursor.getInt(0));
             } while (cursor.moveToNext());
             cursor.close();
         }
 
-        if (entries.isEmpty()) {
+        if (scores.isEmpty()) {
             testLineChart.setNoDataText("Take a test to see your score!");
             if (isDarkMode) {
                 testLineChart.setNoDataTextColor(Color.parseColor("#EAEAEA"));
@@ -264,6 +413,11 @@ public class DashboardActivity extends AppCompatActivity {
             }
             testLineChart.invalidate();
             return;
+        }
+
+        // Reverse order - newest on right
+        for (int i = scores.size() - 1; i >= 0; i--) {
+            entries.add(new Entry(scores.size() - i, scores.get(i)));
         }
 
         LineDataSet dataSet = new LineDataSet(entries, "Test Scores");
@@ -341,23 +495,20 @@ public class DashboardActivity extends AppCompatActivity {
         };
         dataSet.setColors(colors);
 
-        dataSet.setValueTextSize(12f);
-
-        // Set percentage text color
         if (isDarkMode) {
             dataSet.setValueTextColor(Color.parseColor("#EAEAEA"));
         } else {
             dataSet.setValueTextColor(Color.parseColor("#1A1A2E"));
         }
 
+        dataSet.setValueTextSize(12f);
+
         PieData pieData = new PieData(dataSet);
         errorPieChart.setData(pieData);
 
-        // Set colors based on theme
         if (isDarkMode) {
             errorPieChart.setCenterTextColor(Color.parseColor("#EAEAEA"));
             errorPieChart.setHoleColor(Color.parseColor("#121212"));
-            // MAKE LEGEND LABELS WHITE
             errorPieChart.setEntryLabelColor(Color.WHITE);
             errorPieChart.getLegend().setTextColor(Color.WHITE);
         } else {
@@ -393,6 +544,13 @@ public class DashboardActivity extends AppCompatActivity {
             sb.append("No errors recorded yet.\n\nStart writing to see your progress!");
         }
         topMistakesList.setText(sb.toString());
+
+        // Set text color based on theme
+        if (isDarkMode) {
+            topMistakesList.setTextColor(Color.parseColor("#EAEAEA"));
+        } else {
+            topMistakesList.setTextColor(Color.parseColor("#1A1A2E"));
+        }
     }
 
     private void setupBadges() {
@@ -419,7 +577,7 @@ public class DashboardActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             onBackPressed();
             return true;
