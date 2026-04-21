@@ -15,7 +15,7 @@
         android:background="@color/primary"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="GrammarHelper">
+        app:title="Grammar Expert">
 
         <ImageButton
             android:id="@+id/btnSettings"

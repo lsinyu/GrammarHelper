@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">Grammar Helper</string>
-    <string name="accessibility_description">Allows GrammarHelper to read and correct text you type across different applications.</string>
+    <string name="app_name">Grammar Expert</string>
+    <string name="accessibility_description">Allows Grammar Expert to read and correct text you type across different applications.</string>
 </resources>

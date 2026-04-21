@@ -12,16 +12,23 @@
         android:layout_width="120dp"
         android:layout_height="120dp"
         android:src="@mipmap/ic_launcher"
-        android:layout_marginBottom="32dp" />
+        android:layout_marginBottom="16dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Grammar Helper"
-        android:textSize="28sp"
+        android:text="Grammar Expert"
+        android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="@color/primary"
-        android:layout_marginBottom="8dp" />
+        android:letterSpacing="0.05"
+        android:layout_marginBottom="4dp" />
+
+    <View
+        android:layout_width="60dp"
+        android:layout_height="2dp"
+        android:background="@color/accent"
+        android:layout_marginBottom="12dp" />
 
     <TextView
         android:layout_width="wrap_content"

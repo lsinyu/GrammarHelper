@@ -31,5 +31,8 @@
         <!-- Toolbar -->
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
+
+        <!-- RadioButton selection color -->
+        <item name="colorControlActivated">@color/engagement_purple</item>
     </style>
 </resources>
