@@ -45,13 +45,15 @@
         <activity
             android:name=".ui.SmartEditorActivity"
             android:configChanges="uiMode|orientation|screenSize"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Chatbot Activity -->
         <activity
             android:name=".ui.ChatbotActivity"
             android:configChanges="uiMode|orientation|screenSize"
-            android:exported="false" />
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
 
         <!-- Error Review Activity -->
         <activity
